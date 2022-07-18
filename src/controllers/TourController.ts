@@ -58,9 +58,11 @@ export const getTours = async (req:Request , res:Response , next:NextFunction) =
 
       console.log(queryObj)
       let sortQuery :{[key: string]: string}[] | null = null
+      
+      ////////////////// SORT
       if(queryObj && queryObj.sort){
-        console.log(queryObj.sort)
         if(typeof queryObj.sort === 'string'){
+            console.log("QUERY IS STRING")
             const sortKeys = (queryObj.sort).split(',')  
             sortQuery = sortKeys.map((k:string) => {
                 const query:{[key: string]: string} = {[k]:'asc'}
@@ -80,19 +82,36 @@ export const getTours = async (req:Request , res:Response , next:NextFunction) =
         }
       }
 
+      ////////////////// FIELDS ////////////////////////////////
+      let fieldQuery :{[key: string]: boolean} | null = null
+      if(queryObj && queryObj.fields){
+        const fieldNames:string[] = (queryObj.fields as string).split(',')
+        if(fieldNames.length > 0){
+            fieldQuery = {}
+           fieldNames.forEach((fieldName:string) => {
+           if(fieldQuery){
+            fieldQuery[fieldName] = true 
+           }     
+        })
+        }else{
+            fieldQuery = {[queryObj.fields as string]: true} as any
+        }
+      }
       let durationQuery:{[key: string]: string} = queryObj.duration as {[key: string]: string}
 
       console.log(durationQuery)
       console.log(sortQuery)
+      console.log(fieldQuery)
 
 
     try {
-        let  tours :Tour[] = []
+        let  tours :Tour[]|any[] = []
        /// sort and duration
-        if(queryObj && (queryObj.sortDirection || queryObj.duration)) {
+        if(queryObj && (queryObj.sort && queryObj.duration  && queryObj.fields)) {
             tours =   await prisma.tour.findMany({
                 orderBy:[...(sortQuery as [])],
-                where:{duration:queryObj.duration as any}
+                where:{duration:queryObj.duration as any},
+                select:{... fieldQuery}
             }) 
             res.status(200).json({
                 message:"success",
@@ -103,7 +122,7 @@ export const getTours = async (req:Request , res:Response , next:NextFunction) =
         }else if(queryObj &&  queryObj.duration){
           
             tours =  await await prisma.tour.findMany({
-                where:{duration: {... queryObj.duration as any}}
+                where:{duration: {... queryObj.duration as any}},
             }) 
             res.status(200).json({
                 message:"success",
@@ -120,7 +139,19 @@ export const getTours = async (req:Request , res:Response , next:NextFunction) =
                 count:tours.length,
                 data:tours
             });
-        }else{
+        }
+        else if(queryObj &&  queryObj.fields){
+          
+            tours =  await await prisma.tour.findMany({
+                select:{... fieldQuery}
+            }) 
+            res.status(200).json({
+                message:"success",
+                count:tours.length,
+                data:tours
+            });
+        }
+        else{
             tours =  await await prisma.tour.findMany() 
             res.status(200).json({
                 message:"success",

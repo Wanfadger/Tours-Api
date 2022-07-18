@@ -55,9 +55,10 @@ const getTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     // excludeQuery.forEach(query => (delete queryObj[query]))
     console.log(queryObj);
     let sortQuery = null;
+    ////////////////// SORT
     if (queryObj && queryObj.sort) {
-        console.log(queryObj.sort);
         if (typeof queryObj.sort === 'string') {
+            console.log("QUERY IS STRING");
             const sortKeys = (queryObj.sort).split(',');
             sortQuery = sortKeys.map((k) => {
                 const query = { [k]: 'asc' };
@@ -76,16 +77,34 @@ const getTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             });
         }
     }
+    ////////////////// FIELDS ////////////////////////////////
+    let fieldQuery = null;
+    if (queryObj && queryObj.fields) {
+        const fieldNames = queryObj.fields.split(',');
+        if (fieldNames.length > 0) {
+            fieldQuery = {};
+            fieldNames.forEach((fieldName) => {
+                if (fieldQuery) {
+                    fieldQuery[fieldName] = true;
+                }
+            });
+        }
+        else {
+            fieldQuery = { [queryObj.fields]: true };
+        }
+    }
     let durationQuery = queryObj.duration;
     console.log(durationQuery);
     console.log(sortQuery);
+    console.log(fieldQuery);
     try {
         let tours = [];
         /// sort and duration
-        if (queryObj && (queryObj.sortDirection || queryObj.duration)) {
+        if (queryObj && (queryObj.sort && queryObj.duration && queryObj.fields)) {
             tours = yield prisma.tour.findMany({
                 orderBy: [...sortQuery],
-                where: { duration: queryObj.duration }
+                where: { duration: queryObj.duration },
+                select: Object.assign({}, fieldQuery)
             });
             res.status(200).json({
                 message: "success",
@@ -95,7 +114,7 @@ const getTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         }
         else if (queryObj && queryObj.duration) {
             tours = yield yield prisma.tour.findMany({
-                where: { duration: Object.assign({}, queryObj.duration) }
+                where: { duration: Object.assign({}, queryObj.duration) },
             });
             res.status(200).json({
                 message: "success",
@@ -106,6 +125,16 @@ const getTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         else if (queryObj && queryObj.sort) {
             tours = yield yield prisma.tour.findMany({
                 orderBy: [...sortQuery],
+            });
+            res.status(200).json({
+                message: "success",
+                count: tours.length,
+                data: tours
+            });
+        }
+        else if (queryObj && queryObj.fields) {
+            tours = yield yield prisma.tour.findMany({
+                select: Object.assign({}, fieldQuery)
             });
             res.status(200).json({
                 message: "success",
