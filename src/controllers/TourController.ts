@@ -1,11 +1,11 @@
+import { ApiError } from './../utils/ApiError';
 
-import { CreateTourDto, SearchQueryParams } from './../dtos/tour-dtos';
-import { NextFunction, query, Request, Response } from "express";
+import { CreateTourDto } from './../dtos/tour-dtos';
+import { NextFunction, Request, Response } from "express";
 
 import { Difficulty, PrismaClient, Tour } from "@prisma/client";
-import { data , UniqueViolationException } from '../utils/exceptions.util';
-import { join } from 'path';
-import { kMaxLength } from 'buffer';
+
+import {data} from './../utils/data'
 
 const prisma:PrismaClient = new PrismaClient();
 
@@ -37,12 +37,11 @@ export const createTour = async (req:Request , res:Response , next:NextFunction)
     }catch(error:any){
         // console.error(error)
         if(error.code === 'P2002'){
-          res.status(400).json({error:new UniqueViolationException(`Values for "${error.meta.target}" are creating duplicate values`).message, 
-        t:error
-        })
+            next(new ApiError(`Values for "${error.meta.target}" are creating duplicate values` , 400))
         }else{
-            next(error);
+            next(new ApiError(`Values for "${error.meta.target}" are creating duplicate values`)) 
         }
+        
     }
 
 
@@ -97,7 +96,21 @@ export const getTours = async (req:Request , res:Response , next:NextFunction) =
             fieldQuery = {[queryObj.fields as string]: true} as any
         }
       }
+
+      //////////  DURATION //////////////////////////////////
       let durationQuery:{[key: string]: string} = queryObj.duration as {[key: string]: string}
+
+
+      //////////  PAGINATION //////////////////////////////////
+      let skip = 0
+      let limit:number = 50
+      if(queryObj.page && queryObj.page){
+        const page:number = Number(queryObj.page)
+         limit = Number(queryObj.limit) || 50
+         skip = ((page - 1) * limit) || 50
+      }
+      
+
 
       console.log(durationQuery)
       console.log(sortQuery)
@@ -152,7 +165,9 @@ export const getTours = async (req:Request , res:Response , next:NextFunction) =
             });
         }
         else{
-            tours =  await await prisma.tour.findMany() 
+            tours =  await await prisma.tour.findMany({
+                take:limit
+            }) 
             res.status(200).json({
                 message:"success",
                 count:tours.length,
@@ -183,7 +198,8 @@ export const getTour = async (req:Request , res:Response , next:NextFunction) =>
        const tour:Tour|null = await getTourById(id);
 
         if (!tour) {
-            res.status(404).json({ message: `No tour found matching ${id}` });
+
+            return next(new ApiError(`No tour found matching ${id}`, 404));
         }
         
         res.status(200).json({data:tour})
@@ -263,12 +279,6 @@ export const loadTours  =  async (req:Request , res:Response , next:NextFunction
 
     }catch(error:any){
         // console.error(error)
-        if(error.code === 'P2002'){
-          res.status(400).json({error:new UniqueViolationException(`Values for "${error.meta.target}" are creating duplicate values`).message, 
-        t:error
-        })
-        }else{
-            next(error);
-        }
+     return  next(error)
     }
 }

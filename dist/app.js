@@ -8,6 +8,9 @@ const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 const express_query_parser_1 = require("express-query-parser");
 const TourRouter_1 = require("./routes/TourRouter");
+const AuthRouter_1 = require("./routes/AuthRouter");
+const ApiError_1 = require("./utils/ApiError");
+const GlobalErrorHandler_1 = require("./utils/GlobalErrorHandler");
 exports.app = (0, express_1.default)();
 exports.app.use(express_1.default.json());
 exports.app.use((0, morgan_1.default)("dev"));
@@ -17,5 +20,9 @@ exports.app.use((0, express_query_parser_1.queryParser)({
     parseNumber: true,
     parseUndefined: true,
 }));
+exports.app.use("/api/auth", AuthRouter_1.AuthRouter);
 exports.app.use('/api/tours', TourRouter_1.TourRouter);
+exports.app.all("*", (req, res, next) => next(new ApiError_1.ApiError(`Can't find ${req.originalUrl} on the server`, 404)));
+/// global error handler
+exports.app.use(GlobalErrorHandler_1.GlobalErrorHandler);
 //# sourceMappingURL=app.js.map

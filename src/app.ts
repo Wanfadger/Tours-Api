@@ -1,9 +1,12 @@
-import express, { Request, Response } from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import morgan from 'morgan'
 import { queryParser } from 'express-query-parser'
 
 
 import { TourRouter } from './routes/TourRouter'
+import { AuthRouter } from './routes/AuthRouter'
+import { ApiError } from './utils/ApiError';
+import { GlobalErrorHandler } from './utils/GlobalErrorHandler';
 
 
 export const app:express.Application = express()
@@ -16,6 +19,12 @@ app.use(queryParser({
     parseUndefined: true,
 }))
 
-
+app.use("/api/auth" , AuthRouter )
 app.use('/api/tours' , TourRouter)
 
+app.all("*" , (req:Request , res:Response , next:NextFunction) => 
+    next(new ApiError(`Can't find ${req.originalUrl} on the server` , 404)))
+
+
+/// global error handler
+app.use(GlobalErrorHandler)

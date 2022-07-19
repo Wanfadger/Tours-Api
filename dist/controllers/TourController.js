@@ -10,8 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadTours = exports.deleteTour = exports.updateTour = exports.getTour = exports.getTours = exports.createTour = void 0;
+const ApiError_1 = require("./../utils/ApiError");
 const client_1 = require("@prisma/client");
-const exceptions_util_1 = require("../utils/exceptions.util");
+const data_1 = require("./../utils/data");
 const prisma = new client_1.PrismaClient();
 const createTour = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const tour = req.body;
@@ -39,12 +40,10 @@ const createTour = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     catch (error) {
         // console.error(error)
         if (error.code === 'P2002') {
-            res.status(400).json({ error: new exceptions_util_1.UniqueViolationException(`Values for "${error.meta.target}" are creating duplicate values`).message,
-                t: error
-            });
+            next(new ApiError_1.ApiError(`Values for "${error.meta.target}" are creating duplicate values`, 400));
         }
         else {
-            next(error);
+            next(new ApiError_1.ApiError(`Values for "${error.meta.target}" are creating duplicate values`));
         }
     }
 });
@@ -93,7 +92,16 @@ const getTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             fieldQuery = { [queryObj.fields]: true };
         }
     }
+    //////////  DURATION //////////////////////////////////
     let durationQuery = queryObj.duration;
+    //////////  PAGINATION //////////////////////////////////
+    let skip = 0;
+    let limit = 50;
+    if (queryObj.page && queryObj.page) {
+        const page = Number(queryObj.page);
+        limit = Number(queryObj.limit) || 50;
+        skip = ((page - 1) * limit) || 50;
+    }
     console.log(durationQuery);
     console.log(sortQuery);
     console.log(fieldQuery);
@@ -143,7 +151,9 @@ const getTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             });
         }
         else {
-            tours = yield yield prisma.tour.findMany();
+            tours = yield yield prisma.tour.findMany({
+                take: limit
+            });
             res.status(200).json({
                 message: "success",
                 count: tours.length,
@@ -166,7 +176,7 @@ const getTour = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const tour = yield getTourById(id);
         if (!tour) {
-            res.status(404).json({ message: `No tour found matching ${id}` });
+            return next(new ApiError_1.ApiError(`No tour found matching ${id}`, 404));
         }
         res.status(200).json({ data: tour });
     }
@@ -209,7 +219,7 @@ const deleteTour = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 exports.deleteTour = deleteTour;
 const loadTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const dd = exceptions_util_1.data;
+        const dd = data_1.data;
         yield prisma.tour.createMany({
             data: [...dd.map(tour => ({
                     name: tour.name,
@@ -233,14 +243,7 @@ const loadTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     }
     catch (error) {
         // console.error(error)
-        if (error.code === 'P2002') {
-            res.status(400).json({ error: new exceptions_util_1.UniqueViolationException(`Values for "${error.meta.target}" are creating duplicate values`).message,
-                t: error
-            });
-        }
-        else {
-            next(error);
-        }
+        return next(error);
     }
 });
 exports.loadTours = loadTours;
