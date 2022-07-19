@@ -1,6 +1,9 @@
+
+
 import { PrismaClient } from "@prisma/client";
 import { NextFunction , Response , Request} from "express";
 import  bcrypt from "bcryptjs"
+import * as Jwt from "jsonwebtoken";
 
 
 import { CreateUserDto } from './../dtos/user.dtos';
@@ -12,6 +15,8 @@ export const signUp =  async (req:Request , res:Response , next:NextFunction) =>
     const user:CreateUserDto = req.body as CreateUserDto
   
     try {
+  
+      
 
       const savedUser =  await prisma.user.create({
             data:{
@@ -23,8 +28,11 @@ export const signUp =  async (req:Request , res:Response , next:NextFunction) =>
            })
 
            res.status(201).json({
-            data:savedUser
-           })
+            data:savedUser,
+            token:   Jwt.sign({id:savedUser.id} , process.env.JWT_SECRET_KEY as string , {expiresIn:"9d"})
+                
+            })
+        
          
     } catch (error) {
         return next(error)
