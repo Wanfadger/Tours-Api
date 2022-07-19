@@ -31,4 +31,6 @@ const express_1 = __importDefault(require("express"));
 const AuthController = __importStar(require("./../controllers/AuthController"));
 exports.AuthRouter = express_1.default.Router();
 exports.AuthRouter.post("/signup", AuthController.signUp);
+exports.AuthRouter.post("/login", AuthController.login);
+exports.AuthRouter.post("/forgotPassword", AuthController.forgotPassword);
 //# sourceMappingURL=AuthRouter.js.map

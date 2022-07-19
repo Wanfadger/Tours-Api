@@ -10,7 +10,9 @@ import {data} from './../utils/data'
 const prisma:PrismaClient = new PrismaClient();
 
 export const createTour = async (req:Request , res:Response , next:NextFunction) => {
+
     const tour:CreateTourDto = req.body
+
   
     try{
       const savedTour:Tour = await prisma.tour.create({data:{

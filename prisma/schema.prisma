@@ -44,5 +44,14 @@ model User{
   name String 
   email String @unique
   photo String?
+  role Role @default(LOCAL_GUIDE)
   password String
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+}
+
+enum Role{
+  ADMIN
+  LEAD_GUIDE
+  LOCAL_GUIDE
 }
