@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.RoleRestriction = exports.ValidateToken = exports.signUp = exports.login = void 0;
+exports.updatePassword = exports.resetPassword = exports.forgotPassword = exports.RoleRestriction = exports.ValidateToken = exports.signUp = exports.login = void 0;
 const client_1 = require("@prisma/client");
 const crypto_1 = __importDefault(require("crypto"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -75,7 +75,7 @@ const signUp = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
                 name: user.name,
                 email: user.email,
                 photo: user.photo,
-                password: yield bcryptjs_1.default.hash(user.password, bcryptjs_1.default.genSaltSync(12))
+                password: yield bcryptjs_1.default.hash(user.password, bcryptjs_1.default.genSaltSync(Number(process.env.BCRYPT_SALT)))
             }
         });
         res.status(201).json({
@@ -192,7 +192,7 @@ const resetPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         }
         yield prisma.user.update({
             where: { id: user.id },
-            data: Object.assign(Object.assign({}, user), { password: rPassword.password, passwordResetToken: null, passwordResetExpires: null })
+            data: Object.assign(Object.assign({}, user), { password: yield bcryptjs_1.default.hash(rPassword.password, bcryptjs_1.default.genSaltSync(Number(process.env.BCRYPT_SALT))), passwordResetToken: null, passwordResetExpires: null })
         });
         // TODO: Log user in , send jwt token
         res.status(200).json({
@@ -204,4 +204,33 @@ const resetPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.resetPassword = resetPassword;
+const updatePassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // TODO: GET User
+        const user = req.body.user;
+        const dto = req.body;
+        if (!dto.newPassword && !dto.password) {
+            return next(new ApiError_1.ApiError("Missing update passwords", 400));
+        }
+        // TODO: CHECK Password Correct
+        const updateUser = yield prisma.user.findUnique({
+            where: { id: user.id },
+        });
+        if (updateUser && !(yield bcryptjs_1.default.compare(dto.password, updateUser === null || updateUser === void 0 ? void 0 : updateUser.password))) {
+            return next(new ApiError_1.ApiError("Invalid password", 403));
+        }
+        // TODO: UPDATE PASSWORD
+        yield prisma.user.update({
+            where: { id: user.id },
+            data: Object.assign(Object.assign({}, updateUser), { password: yield bcryptjs_1.default.hash(dto.newPassword, bcryptjs_1.default.genSaltSync(Number(process.env.BCRYPT_SALT))) })
+        });
+        res.status(200).json({
+            token: genToken(user.id)
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updatePassword = updatePassword;
 //# sourceMappingURL=AuthController.js.map

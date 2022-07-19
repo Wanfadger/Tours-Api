@@ -11,6 +11,12 @@ export interface ResetPasswordDto{
     password:string
 }
 
+export interface UpdatePasswordDto{
+    password:string
+    newPassword:string
+}
+
+
 export interface Email{
     to:string
     from:string

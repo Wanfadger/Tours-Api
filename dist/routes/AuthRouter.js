@@ -34,4 +34,5 @@ exports.AuthRouter.post("/signup", AuthController.signUp);
 exports.AuthRouter.post("/login", AuthController.login);
 exports.AuthRouter.post("/forgotPassword", AuthController.forgotPassword);
 exports.AuthRouter.put("/resetPassword/:token", AuthController.resetPassword);
+exports.AuthRouter.put("/updatePassword", AuthController.ValidateToken, AuthController.updatePassword);
 //# sourceMappingURL=AuthRouter.js.map

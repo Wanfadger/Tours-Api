@@ -1,12 +1,11 @@
-
 import { PrismaClient, User } from "@prisma/client";
 import { NextFunction, Response, Request } from "express";
 import crypto from "crypto";
 import bcrypt from "bcryptjs"
 import * as Jwt from "jsonwebtoken";
 import { ApiError } from './../utils/ApiError';
-import { LoginDto, ResetPasswordDto } from "./../dtos/auth.dtos";
-import { CreateUserDto, UserDto } from "./../dtos/user.dtos";
+import { LoginDto, ResetPasswordDto , UpdatePasswordDto} from "./../dtos/auth.dtos";
+import { CreateUserDto, UserDto ,  } from "./../dtos/user.dtos";
 import { sendEmail } from "../utils/emailer";
 
 
@@ -52,7 +51,7 @@ export const signUp = async (req: Request, res: Response, next: NextFunction) =>
                 name: user.name,
                 email: user.email,
                 photo: user.photo,
-                password: await bcrypt.hash(user.password, bcrypt.genSaltSync(12))
+                password: await bcrypt.hash(user.password, bcrypt.genSaltSync(Number(process.env.BCRYPT_SALT)))
             }
         })
 
@@ -195,7 +194,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     
         await prisma.user.update({
             where:{id: user.id},
-            data:{...user , password:rPassword.password  , passwordResetToken:null , passwordResetExpires:null}
+            data:{...user , password:await bcrypt.hash(rPassword.password , bcrypt.genSaltSync(Number(process.env.BCRYPT_SALT)))  , passwordResetToken:null , passwordResetExpires:null}
         })
 
         // TODO: Log user in , send jwt token
@@ -206,7 +205,43 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     } catch (error) {
         next(error)
     }
+}
 
 
+export const updatePassword = async (req: Request, res: Response, next: NextFunction) => {
+
+   try {
+     // TODO: GET User
+     const user:User = req.body.user;
+     const dto:UpdatePasswordDto = req.body
+
+     if(!dto.newPassword && !dto.password){
+        return next(new ApiError("Missing update passwords", 400))
+     }
+
+     // TODO: CHECK Password Correct
+
+     const updateUser:User| null = await prisma.user.findUnique({
+        where: { id: user.id },
+     })
+
+     if(updateUser && !(await bcrypt.compare(dto.password , updateUser?.password))){
+         return next(new ApiError("Invalid password", 403))
+     }
+
+
+    // TODO: UPDATE PASSWORD
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {...updateUser , password:await bcrypt.hash(dto.newPassword , bcrypt.genSaltSync(Number(process.env.BCRYPT_SALT)))}
+    });
+
+    res.status(200).json({
+        token:genToken(user.id)
+    })
+
+   } catch (error) {
+    next(error)
+   }
 
 }
