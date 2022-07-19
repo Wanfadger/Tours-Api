@@ -1,23 +1,23 @@
 import { ApiError } from './../utils/ApiError';
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
-import { UserDto } from './../dtos/user.dtos';
+import { selectPrismaFields } from './../utils/util';
 
 const prisma: PrismaClient = new PrismaClient();
 
-export const allUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const allUsers = async (_req: Request, res: Response, next: NextFunction) => {
 
     try {
-        const users: User[] = await prisma.user.findMany({
-            where: { active: true }
+  
+        const users  = await prisma.user.findMany({
+            where: { active: true },
+            select: {... selectPrismaFields('name' , 'id' , 'email' , 'photo' , 'role')}
         })
-
-        const userList: UserDto[] = users.map(user => ({ id: user.id, name: user.name, email: user.email, photo: user.photo as string, role: user.role }));
 
         res.status(200).json(
             {
-                count: userList.length,
-                data: userList
+                count: users.length,
+                data: users
             }
         )
 
@@ -35,8 +35,9 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
         const id = req.params.id;
 
 
-        const user: User | null = await prisma.user.findUnique({
-            where: { id }
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {... selectPrismaFields('name' , 'id' , 'email' , 'photo' , 'role')}
         })
 
 

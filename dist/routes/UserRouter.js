@@ -26,15 +26,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AuthRouter = void 0;
+exports.UserRouter = void 0;
 const express_1 = __importDefault(require("express"));
-const AuthController = __importStar(require("./../controllers/AuthController"));
-exports.AuthRouter = express_1.default.Router();
-exports.AuthRouter.post("/signup", AuthController.signUp);
-exports.AuthRouter.post("/login", AuthController.login);
-exports.AuthRouter.post("/forgotPassword", AuthController.forgotPassword);
-exports.AuthRouter.put("/resetPassword/:token", AuthController.resetPassword);
-exports.AuthRouter.put("/updatePassword", AuthController.AuthGuard, AuthController.updatePassword);
-exports.AuthRouter.put("/updateMe", AuthController.AuthGuard, AuthController.updateMe);
-exports.AuthRouter.put("/deleteMe", AuthController.AuthGuard, AuthController.deleteMe);
-//# sourceMappingURL=AuthRouter.js.map
+const UserController = __importStar(require("./../controllers/UserController"));
+exports.UserRouter = express_1.default.Router();
+exports.UserRouter.get('/', UserController.allUsers);
+exports.UserRouter.get('/:id', UserController.getUser);
+//# sourceMappingURL=UserRouter.js.map

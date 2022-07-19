@@ -1,5 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express'
 import morgan from 'morgan'
+import helmet from 'helmet'
+import hpp from  'hpp'
 import { queryParser } from 'express-query-parser'
 
 
@@ -14,6 +16,13 @@ import { UserRouter } from './routes/UserRouter'
 
 
 export const app:express.Application = express()
+// SET SECURITY HTTP HEADERS
+app.use(helmet())
+
+// prevent http query pollution
+app.use(hpp())
+
+// SERIAL REQUEST payLoad
 app.use(express.json())
 app.use(morgan("dev"))
 app.use(queryParser({
