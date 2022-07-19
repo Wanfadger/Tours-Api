@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMe = exports.updatePassword = exports.resetPassword = exports.forgotPassword = exports.RoleRestriction = exports.AuthGuard = exports.signUp = exports.login = void 0;
+exports.delMe = exports.updateMe = exports.updatePassword = exports.resetPassword = exports.forgotPassword = exports.RoleRestriction = exports.AuthGuard = exports.signUp = exports.login = void 0;
 const client_1 = require("@prisma/client");
 const crypto_1 = __importDefault(require("crypto"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -247,9 +247,6 @@ const updateMe = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         if (dto.photo) {
             updateUser = Object.assign(Object.assign({}, updateUser), { photo: dto.photo });
         }
-        if (dto.role) {
-            updateUser = Object.assign(Object.assign({}, updateUser), { role: dto.role });
-        }
         // TODO: UPDATE PASSWORD
         yield prisma.user.update({
             where: { id: user.id },
@@ -264,4 +261,32 @@ const updateMe = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.updateMe = updateMe;
+const delMe = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // TODO: GET User
+        const user = req.body.user;
+        const dto = req.body;
+        let updateUser = yield prisma.user.findUnique({
+            where: { id: user.id },
+        });
+        if (dto.name) {
+            updateUser = Object.assign(Object.assign({}, updateUser), { name: dto.name });
+        }
+        if (dto.photo) {
+            updateUser = Object.assign(Object.assign({}, updateUser), { photo: dto.photo });
+        }
+        // TODO: UPDATE PASSWORD
+        yield prisma.user.update({
+            where: { id: user.id },
+            data: Object.assign({}, updateUser)
+        });
+        res.status(200).json({
+            message: 'User updated successfully',
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.delMe = delMe;
 //# sourceMappingURL=AuthController.js.map

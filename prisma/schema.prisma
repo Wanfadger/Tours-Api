@@ -48,6 +48,7 @@ model User{
   password String
   passwordResetToken String?
   passwordResetExpires DateTime?
+  active Boolean @default(true)
 }
 
 enum Role{

@@ -267,9 +267,7 @@ export const updateMe = async (req: Request, res: Response, next: NextFunction) 
         updateUser = {...updateUser , photo:dto.photo} as User
       }
 
-      if(dto.role){
-        updateUser = {...updateUser , role:dto.role} as User
-      }
+     
  
      // TODO: UPDATE PASSWORD
      await prisma.user.update({
@@ -287,3 +285,26 @@ export const updateMe = async (req: Request, res: Response, next: NextFunction) 
  
  }
  
+
+
+ export const deleteMe = async (req: Request, res: Response, next: NextFunction) => {
+
+    try {
+      // TODO: GET User
+      const user:User = req.body.user;
+
+     
+     // TODO: UPDATE PASSWORD
+     await prisma.user.delete({
+         where: { id: user.id },
+     });
+ 
+     res.status(204).json({
+         message: 'User deleted successfully',
+     })
+ 
+    } catch (error) {
+     next(error)
+    }
+ 
+ }

@@ -9,6 +9,7 @@ import { ApiError } from './utils/ApiError';
 import { GlobalErrorHandler } from './utils/GlobalErrorHandler';
 import {AuthGuard , RoleRestriction} from './controllers/AuthController'
 import { Role } from '@prisma/client'
+import { UserRouter } from './routes/UserRouter'
 
 
 
@@ -23,6 +24,7 @@ app.use(queryParser({
 }))
 
 app.use("/api/auth" , AuthRouter  )
+app.use("/api/users" ,AuthGuard, UserRouter)
 app.use('/api/tours' , AuthGuard , RoleRestriction(Role.ADMIN , Role.LEAD_GUIDE) , TourRouter)
 
 app.all("*" , (req:Request , res:Response , next:NextFunction) => 

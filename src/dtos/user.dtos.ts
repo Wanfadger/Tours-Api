@@ -1,8 +1,8 @@
 
 export interface UserDto{
     id:string
-    nam:string 
-    emai:string
+    name:string 
+    email:string
     photo:string
     role:string
 }
@@ -19,7 +19,6 @@ export interface CreateUserDto{
 export interface UpdateUserDto{
     name:string 
     photo:string
-    role:string
 }
 
 
