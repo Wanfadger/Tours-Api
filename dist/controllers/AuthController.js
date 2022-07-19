@@ -152,14 +152,14 @@ const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         if (!updated) {
             return next(new ApiError_1.ApiError("Reset password token failed", 403));
         }
-        const reqUrl = `${req.protocol}://${req.get("host")}/api/auth/resetPassword/${rToken}`;
+        const reqUrl = `${req.protocol}://${req.get("host")}/api/auth/resetPassword/${token}`;
         // TODO: Send email notification
-        const message = `Forgot your password? \n Submit a PATCH request with your new password to ${reqUrl}. \n If you didn't forgot your password, please ignore this email!`;
+        const message = `Forgot your password? \n Submit a PUT request with your new password to ${reqUrl} \n If you didn't forgot your password, please ignore this email!`;
         try {
             yield (0, emailer_1.sendEmail)({ to: updated.email, from: process.env.EMAIL_FROM, subject: "RESET_PASSWORD_TOKEN_EXPIRES_IN 10 minutes", message: message });
         }
         catch (error) {
-            const updated = yield prisma.user.update({
+            yield prisma.user.update({
                 where: { id: user.id },
                 data: Object.assign(Object.assign({}, user), { passwordResetToken: undefined, passwordResetExpires: undefined })
             });
@@ -174,7 +174,34 @@ const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.forgotPassword = forgotPassword;
-const resetPassword = (req, res, next) => {
-};
+const resetPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const rPassword = req.body;
+        const token = req.params.token;
+        // TODO: if toke exists
+        if (!token) {
+            return next(new ApiError_1.ApiError("Token is missiong", 400));
+        }
+        // TODO: GET User based on the reset password token 
+        const rToken = crypto_1.default.createHash(process.env.RESET_PASSWORD_TOKEN_EXPIRES_ALOG).update(token).digest("hex");
+        const user = yield prisma.user.findFirst({
+            where: { passwordResetToken: rToken, passwordResetExpires: { gt: new Date(Date.now()) } }
+        });
+        if (!user) {
+            return next(new ApiError_1.ApiError("Token is invalid or has expired", 400));
+        }
+        yield prisma.user.update({
+            where: { id: user.id },
+            data: Object.assign(Object.assign({}, user), { password: rPassword.password, passwordResetToken: null, passwordResetExpires: null })
+        });
+        // TODO: Log user in , send jwt token
+        res.status(200).json({
+            token: genToken(user.id)
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
 exports.resetPassword = resetPassword;
 //# sourceMappingURL=AuthController.js.map

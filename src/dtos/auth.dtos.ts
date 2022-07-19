@@ -8,7 +8,6 @@ export interface ForgotPasswordDto{
 }
 
 export interface ResetPasswordDto{
-    email:string
     password:string
 }
 

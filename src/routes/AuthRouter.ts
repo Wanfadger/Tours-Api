@@ -6,3 +6,4 @@ export const AuthRouter:Router = express.Router();
 AuthRouter.post("/signup" , AuthController.signUp)
 AuthRouter.post("/login" , AuthController.login)
 AuthRouter.post("/forgotPassword" , AuthController.forgotPassword)
+AuthRouter.put("/resetPassword/:token" , AuthController.resetPassword)

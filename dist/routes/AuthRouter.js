@@ -33,4 +33,5 @@ exports.AuthRouter = express_1.default.Router();
 exports.AuthRouter.post("/signup", AuthController.signUp);
 exports.AuthRouter.post("/login", AuthController.login);
 exports.AuthRouter.post("/forgotPassword", AuthController.forgotPassword);
+exports.AuthRouter.put("/resetPassword/:token", AuthController.resetPassword);
 //# sourceMappingURL=AuthRouter.js.map
