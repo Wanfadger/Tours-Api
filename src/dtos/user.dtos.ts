@@ -15,16 +15,3 @@ export interface CreateUserDto{
     password:string
 }
 
-export interface LoginDto{
-    email:string
-    password:string
-}
-
-export interface ForgotPasswordDto{
-    email:string
-}
-
-export interface ResetPasswordDto{
-    email:string
-    password:string
-}

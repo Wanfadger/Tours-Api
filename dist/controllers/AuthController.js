@@ -41,6 +41,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const Jwt = __importStar(require("jsonwebtoken"));
 const ApiError_1 = require("./../utils/ApiError");
+const emailer_1 = require("../utils/emailer");
 const prisma = new client_1.PrismaClient();
 const genToken = (id) => {
     return Jwt.sign({ id }, process.env.JWT_SECRET_KEY, { expiresIn: process.env.JWT_EXPIRES_IN });
@@ -151,9 +152,21 @@ const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         if (!updated) {
             return next(new ApiError_1.ApiError("Reset password token failed", 403));
         }
+        const reqUrl = `${req.protocol}://${req.get("host")}/api/auth/resetPassword/${rToken}`;
         // TODO: Send email notification
+        const message = `Forgot your password? \n Submit a PATCH request with your new password to ${reqUrl}. \n If you didn't forgot your password, please ignore this email!`;
+        try {
+            yield (0, emailer_1.sendEmail)({ to: updated.email, from: process.env.EMAIL_FROM, subject: "RESET_PASSWORD_TOKEN_EXPIRES_IN 10 minutes", message: message });
+        }
+        catch (error) {
+            const updated = yield prisma.user.update({
+                where: { id: user.id },
+                data: Object.assign(Object.assign({}, user), { passwordResetToken: undefined, passwordResetExpires: undefined })
+            });
+            next(new ApiError_1.ApiError("There was an error sending email, please try again later", 500));
+        }
         res.status(200).json({
-            "mesage": "link sent on your email address"
+            mesage: "Rest link sent on your email address, expires in 10 minutes.",
         });
     }
     catch (error) {

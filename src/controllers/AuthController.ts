@@ -5,9 +5,10 @@ import crypto from "crypto";
 import  bcrypt from "bcryptjs"
 import * as Jwt from "jsonwebtoken";
 import { ApiError } from './../utils/ApiError';
+import { LoginDto } from "./../dtos/auth.dtos";
+import { CreateUserDto, UserDto } from "./../dtos/user.dtos";
+import { sendEmail } from "../utils/emailer";
 
-
-import { CreateUserDto, LoginDto, UserDto } from './../dtos/user.dtos';
 
 
 
@@ -130,8 +131,8 @@ export const forgotPassword = async (req:Request, res:Response , next:NextFuncti
     }
 
    // TODO: Generate random reset token
-   const token = crypto.randomBytes(32).toString("hex")
-   const rToken = crypto.createHash(process.env.RESET_PASSWORD_TOKEN_EXPIRES_ALOG as string).update(token).digest("hex")
+   const token:string = crypto.randomBytes(32).toString("hex")
+   const rToken:string = crypto.createHash(process.env.RESET_PASSWORD_TOKEN_EXPIRES_ALOG as string).update(token).digest("hex")
    const expires:Date = new Date(Date.now() + 1000*60*Number(process.env.RESET_PASSWORD_TOKEN_EXPIRES_IN)) // 10 minutes
    
    
@@ -146,10 +147,24 @@ export const forgotPassword = async (req:Request, res:Response , next:NextFuncti
    }
 
 
+   const reqUrl:string = `${req.protocol}://${req.get("host")}/api/auth/resetPassword/${rToken}`
+
    // TODO: Send email notification
+   const message:string =  `Forgot your password? \n Submit a PATCH request with your new password to ${reqUrl}. \n If you didn't forgot your password, please ignore this email!`
+
+   try {
+    await sendEmail({to:updated.email , from:process.env.EMAIL_FROM as string, subject:"RESET_PASSWORD_TOKEN_EXPIRES_IN 10 minutes", message:message})
+   } catch (error) {
+    const updated = await prisma.user.update({
+        where:{id:user.id},
+        data:{...user, passwordResetToken:undefined ,passwordResetExpires:undefined}
+       })
+
+       next(new ApiError("There was an error sending email, please try again later" , 500))
+   }
 
    res.status(200).json({
-    "mesage":"link sent on your email address"
+    mesage:"Rest link sent on your email address, expires in 10 minutes.",
    })
    } catch (error) {
     next(error)
