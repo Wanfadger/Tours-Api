@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs"
 import * as Jwt from "jsonwebtoken";
 import { ApiError } from './../utils/ApiError';
 import { LoginDto, ResetPasswordDto , UpdatePasswordDto} from "./../dtos/auth.dtos";
-import { CreateUserDto, UserDto ,  } from "./../dtos/user.dtos";
+import { CreateUserDto, UserDto , UpdateUserDto } from "./../dtos/user.dtos";
 import { sendEmail } from "../utils/emailer";
 
 
@@ -68,7 +68,7 @@ export const signUp = async (req: Request, res: Response, next: NextFunction) =>
 }
 
 
-export const ValidateToken = async (req: Request, res: Response, next: NextFunction) => {
+export const AuthGuard = async (req: Request, res: Response, next: NextFunction) => {
     try {
         ///1) Check if the token is there
         let token: string | null = null
@@ -245,3 +245,45 @@ export const updatePassword = async (req: Request, res: Response, next: NextFunc
    }
 
 }
+
+
+
+export const updateMe = async (req: Request, res: Response, next: NextFunction) => {
+
+    try {
+      // TODO: GET User
+      const user:User = req.body.user;
+      const dto:UpdateUserDto = req.body
+
+      let updateUser:User| null = await prisma.user.findUnique({
+         where: { id: user.id },
+      })
+
+      if(dto.name){
+        updateUser = {...updateUser , name:dto.name} as User
+      }
+
+      if(dto.photo){
+        updateUser = {...updateUser , photo:dto.photo} as User
+      }
+
+      if(dto.role){
+        updateUser = {...updateUser , role:dto.role} as User
+      }
+ 
+     // TODO: UPDATE PASSWORD
+     await prisma.user.update({
+         where: { id: user.id },
+         data: {...updateUser }
+     });
+ 
+     res.status(200).json({
+         message: 'User updated successfully',
+     })
+ 
+    } catch (error) {
+     next(error)
+    }
+ 
+ }
+ 

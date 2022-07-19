@@ -23,7 +23,7 @@ exports.app.use((0, express_query_parser_1.queryParser)({
     parseUndefined: true,
 }));
 exports.app.use("/api/auth", AuthRouter_1.AuthRouter);
-exports.app.use('/api/tours', AuthController_1.ValidateToken, (0, AuthController_1.RoleRestriction)(client_1.Role.ADMIN, client_1.Role.LEAD_GUIDE), TourRouter_1.TourRouter);
+exports.app.use('/api/tours', AuthController_1.AuthGuard, (0, AuthController_1.RoleRestriction)(client_1.Role.ADMIN, client_1.Role.LEAD_GUIDE), TourRouter_1.TourRouter);
 exports.app.all("*", (req, res, next) => next(new ApiError_1.ApiError(`Can't find ${req.originalUrl} on the server`, 404)));
 /// global error handler
 exports.app.use(GlobalErrorHandler_1.GlobalErrorHandler);

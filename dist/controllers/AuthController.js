@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePassword = exports.resetPassword = exports.forgotPassword = exports.RoleRestriction = exports.ValidateToken = exports.signUp = exports.login = void 0;
+exports.updateMe = exports.updatePassword = exports.resetPassword = exports.forgotPassword = exports.RoleRestriction = exports.AuthGuard = exports.signUp = exports.login = void 0;
 const client_1 = require("@prisma/client");
 const crypto_1 = __importDefault(require("crypto"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -88,7 +88,7 @@ const signUp = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.signUp = signUp;
-const ValidateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const AuthGuard = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         ///1) Check if the token is there
         let token = null;
@@ -122,7 +122,7 @@ const ValidateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         return next(error);
     }
 });
-exports.ValidateToken = ValidateToken;
+exports.AuthGuard = AuthGuard;
 const RoleRestriction = (...roles) => {
     return (req, res, next) => {
         const user = req.body.user;
@@ -233,4 +233,35 @@ const updatePassword = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.updatePassword = updatePassword;
+const updateMe = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // TODO: GET User
+        const user = req.body.user;
+        const dto = req.body;
+        let updateUser = yield prisma.user.findUnique({
+            where: { id: user.id },
+        });
+        if (dto.name) {
+            updateUser = Object.assign(Object.assign({}, updateUser), { name: dto.name });
+        }
+        if (dto.photo) {
+            updateUser = Object.assign(Object.assign({}, updateUser), { photo: dto.photo });
+        }
+        if (dto.role) {
+            updateUser = Object.assign(Object.assign({}, updateUser), { role: dto.role });
+        }
+        // TODO: UPDATE PASSWORD
+        yield prisma.user.update({
+            where: { id: user.id },
+            data: Object.assign({}, updateUser)
+        });
+        res.status(200).json({
+            message: 'User updated successfully',
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.updateMe = updateMe;
 //# sourceMappingURL=AuthController.js.map

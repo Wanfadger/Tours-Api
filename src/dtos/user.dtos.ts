@@ -15,3 +15,12 @@ export interface CreateUserDto{
     password:string
 }
 
+
+export interface UpdateUserDto{
+    name:string 
+    photo:string
+    role:string
+}
+
+
+

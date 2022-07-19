@@ -7,7 +7,7 @@ import { TourRouter } from './routes/TourRouter'
 import { AuthRouter } from './routes/AuthRouter'
 import { ApiError } from './utils/ApiError';
 import { GlobalErrorHandler } from './utils/GlobalErrorHandler';
-import {ValidateToken , RoleRestriction} from './controllers/AuthController'
+import {AuthGuard , RoleRestriction} from './controllers/AuthController'
 import { Role } from '@prisma/client'
 
 
@@ -23,7 +23,7 @@ app.use(queryParser({
 }))
 
 app.use("/api/auth" , AuthRouter  )
-app.use('/api/tours' , ValidateToken , RoleRestriction(Role.ADMIN , Role.LEAD_GUIDE) , TourRouter)
+app.use('/api/tours' , AuthGuard , RoleRestriction(Role.ADMIN , Role.LEAD_GUIDE) , TourRouter)
 
 app.all("*" , (req:Request , res:Response , next:NextFunction) => 
     next(new ApiError(`Can't find ${req.originalUrl} on the server` , 404)))
