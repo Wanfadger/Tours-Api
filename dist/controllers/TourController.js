@@ -8,9 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.loadTours = exports.deleteTour = exports.updateTour = exports.getTour = exports.getTours = exports.createTour = void 0;
 const ApiError_1 = require("./../utils/ApiError");
+const util_1 = require("util");
+const fs_1 = __importDefault(require("fs"));
 const client_1 = require("@prisma/client");
 const data_1 = require("./../utils/data");
 const prisma = new client_1.PrismaClient();
@@ -220,25 +225,34 @@ exports.deleteTour = deleteTour;
 const loadTours = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const dd = data_1.data;
-        yield prisma.tour.createMany({
-            data: [...dd.map(tour => ({
-                    name: tour.name,
-                    price: tour.price,
-                    rating: tour.rating,
-                    priceDiscount: tour.priceDiscount,
-                    summary: tour.summary,
-                    duration: tour.duration,
-                    description: tour.description,
-                    difficulty: tour.difficulty == "EASY" ? client_1.Difficulty.EASY : tour.difficulty == "MEDIUM" ? client_1.Difficulty.MEDIUM : client_1.Difficulty.DIFFICULT,
-                    imageCover: tour.imageCover,
-                    images: tour.images,
-                    maxGroupSize: tour.maxGroupSize,
-                    startDates: tour.startDates.map(d => new Date(d)),
-                    endDates: tour.endDates.map(d => new Date(d)),
-                }))]
+        (0, util_1.promisify)(fs_1.default.readFile);
+        fs_1.default.readFile("./dist/assets/tours.json", { encoding: "utf8" }, (err, data) => {
+            console.log(data);
+            console.log(err);
         });
+        const tours = [];
+        // console.log(tours)
+        // console.log(tours)
+        // await prisma.tour.createMany({
+        //     data: [... dd.map(tour => ({
+        //         name: tour.name,
+        //         price: tour.price,
+        //         rating: tour.rating,
+        //         priceDiscount: tour.priceDiscount,
+        //         summary: tour.summary,
+        //         duration: tour.duration,
+        //         description: tour.description,
+        //         difficulty: tour.difficulty == "EASY" ? Difficulty.EASY : tour.difficulty == "MEDIUM" ? Difficulty.MEDIUM : Difficulty.DIFFICULT,
+        //         imageCover: tour.imageCover,
+        //         images: tour.images,
+        //         maxGroupSize: tour.maxGroupSize,
+        //         startDates: tour.startDates.map(d => new Date(d)),
+        //         endDates: tour.endDates.map(d => new Date(d)),
+        //     }))]
+        // })
         res.json({
-            message: `Successfully created tours ${dd.length}`
+            message: `Successfully created tours ${dd.length}`,
+            data: tours
         });
     }
     catch (error) {

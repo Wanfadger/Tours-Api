@@ -2,6 +2,8 @@ import { ApiError } from './../utils/ApiError';
 
 import { CreateTourDto } from './../dtos/tour-dtos';
 import { NextFunction, Request, Response } from "express";
+import { promisify } from 'util';
+import fs from "fs";
 
 import { Difficulty, PrismaClient, Tour } from "@prisma/client";
 
@@ -256,27 +258,38 @@ export const loadTours  =  async (req:Request , res:Response , next:NextFunction
     try{
      
         const dd:CreateTourDto[] = data
+
+        promisify(fs.readFile)
+
+        fs.readFile("./dist/assets/tours.json" , {encoding: "utf8"} , (err, data) => { 
+            console.log(data);
+            console.log(err);
+         })
+        const tours:CreateTourDto[] = []
+        // console.log(tours)
+        // console.log(tours)
         
-        await prisma.tour.createMany({
-            data: [... dd.map(tour => ({
-                name: tour.name,
-                price: tour.price,
-                rating: tour.rating,
-                priceDiscount: tour.priceDiscount,
-                summary: tour.summary,
-                duration: tour.duration,
-                description: tour.description,
-                difficulty: tour.difficulty == "EASY" ? Difficulty.EASY : tour.difficulty == "MEDIUM" ? Difficulty.MEDIUM : Difficulty.DIFFICULT,
-                imageCover: tour.imageCover,
-                images: tour.images,
-                maxGroupSize: tour.maxGroupSize,
-                startDates: tour.startDates.map(d => new Date(d)),
-                endDates: tour.endDates.map(d => new Date(d)),
-            }))]
-        })
+        // await prisma.tour.createMany({
+        //     data: [... dd.map(tour => ({
+        //         name: tour.name,
+        //         price: tour.price,
+        //         rating: tour.rating,
+        //         priceDiscount: tour.priceDiscount,
+        //         summary: tour.summary,
+        //         duration: tour.duration,
+        //         description: tour.description,
+        //         difficulty: tour.difficulty == "EASY" ? Difficulty.EASY : tour.difficulty == "MEDIUM" ? Difficulty.MEDIUM : Difficulty.DIFFICULT,
+        //         imageCover: tour.imageCover,
+        //         images: tour.images,
+        //         maxGroupSize: tour.maxGroupSize,
+        //         startDates: tour.startDates.map(d => new Date(d)),
+        //         endDates: tour.endDates.map(d => new Date(d)),
+        //     }))]
+        // })
         
         res.json({
-            message:`Successfully created tours ${dd.length}`
+            message:`Successfully created tours ${dd.length}`,
+            data: tours
         })
 
     }catch(error:any){
